@@ -1057,6 +1057,66 @@ class prestudent extends person
 	}
 
 	/**
+	 * Prueft, ob eine Person einen PreStudentstatus-Eintrag vom Typ Absolvent
+	 * fuer einen bestimmten Studiengangtyp hat
+	 * @param int $person_id PersonenNummer mehrstellig
+	 * @param char $STUDIENGANG_TYP (Beispiel: b für Bachelor)
+	 * @return true wenn vorhanden
+	 *		 false wenn nicht vorhanden
+	 *		 false und errormsg wenn Fehler aufgetreten ist
+	 */
+	public function existsAbsolventenstatus($person_id, $STUDIENGANG_TYP)
+	{
+		if(!is_numeric($person_id))
+		{
+			$this->errormsg = 'Person_id muss eine gueltige Zahl sein';
+			return false;
+		}
+
+		if(is_numeric($STUDIENGANG_TYP))
+		{
+			$this->errormsg = 'Studiengangtyp muss ein Buchstabe sein';
+			return false;
+		}
+
+
+		$qry = "SELECT count(*) as anzahl FROM public.tbl_prestudent
+				JOIN public.tbl_prestudentstatus USING (prestudent_id)
+				JOIN public.tbl_studiengang USING (studiengang_kz)
+				WHERE person_id = ".$this->db_add_param($person_id, FHC_INTEGER)."
+				AND status_kurzbz = 'Absolvent'
+				AND typ = ".$this->db_add_param($STUDIENGANG_TYP);
+
+
+		if($this->db_query($qry))
+		{
+			if($row = $this->db_fetch_object())
+			{
+				if($row->anzahl>0)
+				{
+					$this->errormsg = '';
+					return true;
+				}
+				else
+				{
+					$this->errormsg = '';
+					return false;
+				}
+			}
+			else
+			{
+				$this->errormsg = 'Fehler beim Laden der Daten';
+				return false;
+			}
+		}
+		else
+		{
+			$this->errormsg = 'Fehler beim Laden der Daten';
+			return false;
+		}
+	}
+
+	/**
 	 * Speichert den Prestudentstatus
 	 * @return true wenn ok, false im Fehlerfall
 	 */
